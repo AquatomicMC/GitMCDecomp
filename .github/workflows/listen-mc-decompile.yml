@@ -109,8 +109,7 @@ jobs:
         run: |
           mkdir decompiled
           java -cp build/libs/gitmc.jar org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler -dgs=1 "-ind=    " -crp=1 -cps=1 -log=WARN remapped.jar decompiled
-          ls decompiled
-          cp -r decompiled/**/*.java write/src/main/java
+          find decompiled -type f -name "*.java" -execdir cp {} write/src/main/java/ +
 
       - name: Resource files
         if: env.fail == 'false'
