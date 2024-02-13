@@ -8,6 +8,10 @@ version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+    maven {
+       name = "sonatype-oss-snapshots1"
+       url = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+   }
 }
 
 dependencies {
@@ -16,7 +20,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
 
     implementation 'org.benf:cfr:0.152'
-    implementation 'org.vineflower:vineflower:1.9.3'
+    implementation 'org.vineflower:vineflower:1.10.0-SNAPSHOT'
 }
 
 shadowJar {
