@@ -108,8 +108,8 @@ jobs:
         if: env.fail == 'false' && env.decompiler == 'vineflower'
         run: |
           mkdir decompiled
-          java -cp build/libs/gitmc.jar org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler -dgs=1 "-ind=    " -crp=1 -cps=1 -log=WARN remapped.jar decompiled
-          find decompiled -type f -name "*.java" -execdir cp {} write/src/main/java/ +
+          java -cp build/libs/gitmc.jar org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler -dgs=1 "-ind=    " -crp=1 -cps=1 -log=WARN remapped.jar decompiled/remapped.jar
+          unzip -q -o decompiled/remapped.jar '*.java' -d write/src/main/java
 
       - name: Resource files
         if: env.fail == 'false'
