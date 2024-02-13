@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 #  If you can't post workflow_dispatch event, use this
-  schedule:
-    - cron: '0/5 * * * *'
+#  schedule:
+#    - cron: '0/5 * * * *'
 
 jobs:
   build:
@@ -109,6 +109,7 @@ jobs:
         run: |
           mkdir decompiled
           java -cp build/libs/gitmc.jar org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler -dgs=1 "-ind=    " -crp=1 -cps=1 -log=WARN remapped.jar decompiled
+          ls decompiled
           cp -r decompiled/**/*.java write/src/main/java
 
       - name: Resource files
