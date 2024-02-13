@@ -16,7 +16,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
 
     implementation 'org.benf:cfr:0.152'
-    implementation 'org.jboss.windup.decompiler:decompiler-fernflower:6.3.6.Final'
+    implementation 'org.vineflower:vineflower:1.9.3'
 }
 
 shadowJar {
