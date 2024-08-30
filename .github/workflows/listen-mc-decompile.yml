@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 #  If you can't post workflow_dispatch event, use this
-#  schedule:
-#    - cron: '0/5 * * * *'
+  schedule:
+    - cron: '0/5 * * * *'
 
 jobs:
   build:
@@ -104,11 +104,11 @@ jobs:
         if: env.fail == 'false' && env.decompiler == 'cfr' && env.rename_var == 'decompiler'
         run: java -cp build/libs/gitmc.jar org.benf.cfr.reader.Main --silent true --outputdir write/src/main/java --comments false --aggressivesizethreshold 20000 --usenametable false remapped.jar
 
-      - name: Decompile Minecraft file (Fernflower)
-        if: env.fail == 'false' && env.decompiler == 'fernflower'
+      - name: Decompile Minecraft file (Vineflower)
+        if: env.fail == 'false' && env.decompiler == 'vineflower'
         run: |
           mkdir decompiled
-          java -cp build/libs/gitmc.jar org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler -dgs=1 "-ind=    " -crp=1 -cps=1 -log=WARN remapped.jar decompiled
+          java -cp build/libs/gitmc.jar org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler -hes=0 -hdc=0 -dgs=1 -lit=1 -asc=1 "-ind=    " -crp=1 -cps=1 -log=WARN remapped.jar decompiled/remapped.jar
           unzip -q -o decompiled/remapped.jar '*.java' -d write/src/main/java
 
       - name: Resource files
