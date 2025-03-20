@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
@@ -41,7 +41,7 @@ jobs:
     needs: build
     steps:
       - name: Check out Version Branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ secrets.DESTINATION }}
           ref: version
@@ -49,7 +49,7 @@ jobs:
           path: version
 
       - name: Set up Java
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
@@ -75,7 +75,7 @@ jobs:
 
       - name: Check out Write Branch
         if: env.fail == 'false'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ secrets.DESTINATION }}
           ref: ${{ env.branch_read }}
@@ -108,7 +108,7 @@ jobs:
         if: env.fail == 'false' && env.decompiler == 'vineflower'
         run: |
           mkdir decompiled
-          java -cp build/libs/gitmc.jar org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler -hes=0 -hdc=0 -dgs=1 -lit=1 -asc=1 "-ind=    " -crp=1 -cps=1 -log=WARN remapped.jar decompiled/remapped.jar
+          java -cp build/libs/gitmc.jar org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler -hes=0 -hdc=0 -dgs=1 -lit=1 -asc=1 -ind="    " -crp=1 -cps=1 -log=WARN remapped.jar decompiled/remapped.jar
           unzip -q -o decompiled/remapped.jar '*.java' -d write/src/main/java
 
       - name: Resource files
