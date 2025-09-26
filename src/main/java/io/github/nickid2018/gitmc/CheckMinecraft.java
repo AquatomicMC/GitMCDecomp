@@ -4,13 +4,24 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import io.github.nickid2018.mcde.FileProcessor;
+import io.github.nickid2018.mcde2.FileProcessor;
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
-import java.net.URL;
-import java.util.*;
-import java.util.zip.ZipFile;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 
 public class CheckMinecraft {
     private static MainSelector mainSelector;
@@ -21,7 +32,7 @@ public class CheckMinecraft {
     private static final List<String> supportVersions = new ArrayList<>();
     public static final Properties CONFIG = new Properties();
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, URISyntaxException {
         CONFIG.load(Objects.requireNonNull(CheckMinecraft.class.getResourceAsStream("/config.properties")));
 
         initVersions();
@@ -56,9 +67,9 @@ public class CheckMinecraft {
         writer.close();
     }
 
-    private static void initVersions() throws IOException {
+    private static void initVersions() throws IOException, URISyntaxException {
         versionManifest = JsonParser.parseReader(new InputStreamReader(
-                new URL("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json").openStream())).getAsJsonObject();
+                new URI("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json").toURL().openStream())).getAsJsonObject();
         versionManifest.getAsJsonArray("versions").forEach(
                 e -> {
                     JsonObject object = e.getAsJsonObject();
@@ -141,23 +152,28 @@ public class CheckMinecraft {
         try {
             System.out.println("Start remapping " + version);
             versionData = JsonParser.parseReader(
-                    new InputStreamReader(new URL(url).openStream())).getAsJsonObject();
+                    new InputStreamReader(new URI(url).toURL().openStream())).getAsJsonObject();
             JsonObject downloads = versionData.getAsJsonObject("downloads");
 
-            if (!downloads.has("client_mappings")) {
+            if (!downloads.has("client_mappings") && !downloads.has("server_mappings")) {
                 System.out.println(version + " has no mappings, skipped.");
                 return new FailCause(false, true);
             }
 
             String clientURL = downloads.getAsJsonObject("client").get("url").getAsString();
-            String mappingURL = downloads.getAsJsonObject("client_mappings").get("url").getAsString();
+            String clientMappingURL = downloads.getAsJsonObject("client_mappings").get("url").getAsString();
+            String serverMappingURL = downloads.getAsJsonObject("server_mappings").get("url").getAsString();
 
-            IOUtils.copy(new URL(clientURL), new File("client.jar"));
-            IOUtils.copy(new URL(mappingURL), new File("mapping.txt"));
+            IOUtils.copy(new URI(clientURL).toURL(), new File("client.jar"));
+            IOUtils.copy(new URI(clientMappingURL).toURL(), new File("client.txt"));
+            IOUtils.copy(new URI(serverMappingURL).toURL(), new File("server.txt"));
 
-            try (ZipFile file = new ZipFile(new File("client.jar"))) {
-                FileProcessor.process(file, new File("mapping.txt"), new File("remapped.jar"));
-            }
+            FileProcessor.process(
+                Paths.get("client.jar"),
+                Paths.get("remapped.jar"),
+                Paths.get("client.txt"),
+                Paths.get("server.txt")
+            );
         } catch (Exception e) {
             System.out.println("Remap " + version + " failed");
             e.printStackTrace();

@@ -7,6 +7,10 @@ group 'io.github.nickid2018'
 version '1.0-SNAPSHOT'
 
 repositories {
+    maven {
+        name = "FabricMC"
+        url = "https://maven.fabricmc.net/"
+    }
     mavenCentral()
 }
 
@@ -14,6 +18,9 @@ dependencies {
     implementation 'org.ow2.asm:asm-commons:9.8'
     implementation 'commons-io:commons-io:2.20.0'
     implementation 'com.google.code.gson:gson:2.13.2'
+    implementation "net.fabricmc:fabric-loom:1.11-SNAPSHOT"
+    implementation "net.fabricmc:mapping-io:0.7.1"
+    implementation "net.fabricmc:tiny-remapper:0.11.2"
 
     implementation 'org.benf:cfr:0.152'
     implementation 'org.vineflower:vineflower:1.11.1'
