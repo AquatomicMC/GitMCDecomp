@@ -40,21 +40,21 @@ public class CheckMinecraft {
 
         VersionControlTag pair = null;
         StringBuilder sb = new StringBuilder();
-        FailCause failCause = new FailCause(false, true);
+        Result result = new Result(false, true, false);
 
-        while (failCause.noMapping()) {
+        while (result.noMapping()) {
             pair = select();
             String version = pair.version();
-            failCause = processRemap(version);
+            result = processRemap(version);
         }
 
-        if (!failCause.latest()) {
+        if (!result.latest()) {
             recreateBuildGradle();
             sb.append("echo \"branch_read=").append(pair.fromBranch()).append("\" >> $GITHUB_ENV\n");
             sb.append("echo \"branch_write=").append(pair.branch()).append("\" >> $GITHUB_ENV\n");
             sb.append("echo \"version=").append(pair.version()).append("\" >> $GITHUB_ENV\n");
             sb.append("echo \"decompiler=").append(CONFIG.get("gitmc.decompiler")).append("\" >> $GITHUB_ENV\n");
-            sb.append("echo \"rename_var=").append(CONFIG.get("gitmc.renameVar")).append("\" >> $GITHUB_ENV\n");
+            sb.append("echo \"rename_var=").append(result.noRemapName() ? "no-remap" : CONFIG.get("gitmc.renameVar")).append("\" >> $GITHUB_ENV\n");
             sb.append("echo \"fail=false\" >> $GITHUB_ENV\n");
         } else {
             sb.append("echo \"version=").append(pair.lastSuccess()).append("\" >> $GITHUB_ENV\n");
@@ -133,9 +133,9 @@ public class CheckMinecraft {
         return new VersionControlTag(sourceBranch, selector.branch, version, lastSuccessVersion);
     }
 
-    private static FailCause processRemap(String version) {
+    private static Result processRemap(String version) {
         if (version == null)
-            return new FailCause(true, false);
+            return new Result(true, false, false);
 
         String url = null;
         for (JsonElement element : versionManifest.getAsJsonArray("versions")) {
@@ -147,7 +147,7 @@ public class CheckMinecraft {
         }
 
         if (url == null)
-            return new FailCause(true, false);
+            return new Result(true, false, false);
 
         try {
             System.out.println("Start remapping " + version);
@@ -155,32 +155,37 @@ public class CheckMinecraft {
                     new InputStreamReader(new URI(url).toURL().openStream())).getAsJsonObject();
             JsonObject downloads = versionData.getAsJsonObject("downloads");
 
-            if (!downloads.has("client_mappings") && !downloads.has("server_mappings")) {
+            if (!downloads.has("client_mappings") && !downloads.has("server_mappings") && version.matches("^\\d{2}w\\d{2}[a-z]$")) {
                 System.out.println(version + " has no mappings, skipped.");
-                return new FailCause(false, true);
+                return new Result(false, true, false);
             }
 
-            String clientURL = downloads.getAsJsonObject("client").get("url").getAsString();
-            String clientMappingURL = downloads.getAsJsonObject("client_mappings").get("url").getAsString();
-            String serverMappingURL = downloads.getAsJsonObject("server_mappings").get("url").getAsString();
+            if (downloads.has("client_mappings")) {
+                String clientURL = downloads.getAsJsonObject("client").get("url").getAsString();
+                String clientMappingURL = downloads.getAsJsonObject("client_mappings").get("url").getAsString();
+                String serverMappingURL = downloads.getAsJsonObject("server_mappings").get("url").getAsString();
 
-            IOUtils.copy(new URI(clientURL).toURL(), new File("client.jar"));
-            IOUtils.copy(new URI(clientMappingURL).toURL(), new File("client.txt"));
-            IOUtils.copy(new URI(serverMappingURL).toURL(), new File("server.txt"));
+                IOUtils.copy(new URI(clientURL).toURL(), new File("client.jar"));
+                IOUtils.copy(new URI(clientMappingURL).toURL(), new File("client.txt"));
+                IOUtils.copy(new URI(serverMappingURL).toURL(), new File("server.txt"));
 
-            FileProcessor.process(
-                Paths.get("client.jar"),
-                Paths.get("remapped.jar"),
-                Paths.get("client.txt"),
-                Paths.get("server.txt")
-            );
+                FileProcessor.process(
+                    Paths.get("client.jar"),
+                    Paths.get("remapped.jar"),
+                    Paths.get("client.txt"),
+                    Paths.get("server.txt")
+                );
+                return new Result(false, false, false);
+            } else {
+                String clientURL = downloads.getAsJsonObject("client").get("url").getAsString();
+                IOUtils.copy(new URI(clientURL).toURL(), new File("remapped.jar"));
+                return new Result(false, false, true);
+            }
         } catch (Exception e) {
             System.out.println("Remap " + version + " failed");
             e.printStackTrace();
-            return new FailCause(false, false);
+            return new Result(false, false, false);
         }
-
-        return new FailCause(false, false);
     }
 
     private static void recreateBuildGradle() throws IOException {
