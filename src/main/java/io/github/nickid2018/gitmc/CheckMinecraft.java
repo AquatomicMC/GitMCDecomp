@@ -121,6 +121,13 @@ public class CheckMinecraft {
             lastSuccessVersion = selector.startUse();
             version = (selector = mainSelector).nextVersion(supportVersions, lastSuccessVersion);
             sourceBranch = "master";
+        } else if (selector == mainSelector) {
+            if ("1.21.11".equals(lastSuccessVersion)) {
+                version = "1.21.11_unobfuscated";
+            } else if ("1.21.11_unobfuscated".equals(lastSuccessVersion)) {
+                lastSuccessVersion = "1.21.11";
+                version = selector.nextVersion(supportVersions, lastSuccessVersion);
+            }
         }
 
         FileWriter writer = new FileWriter(file);
@@ -140,6 +147,10 @@ public class CheckMinecraft {
         String url = null;
         for (JsonElement element : versionManifest.getAsJsonArray("versions")) {
             JsonObject object = element.getAsJsonObject();
+            if ("1.21.11_unobfuscated".equals(version)) {
+                url = "https://piston-meta.mojang.com/v1/packages/327be7759157b04495c591dbb721875e341877af/1.21.11_unobfuscated.json";
+                break;
+            }
             if (object.get("id").getAsString().equals(version)) {
                 url = object.get("url").getAsString();
                 break;
